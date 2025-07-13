@@ -1,0 +1,27 @@
+[
+  {
+    "img": "https://randomuser.me/api/portraits/men/10.jpg",
+    "emotion": "happy",
+    "timestamp": "2025-07-08T14:20:00Z"
+  },
+  {
+    "img": "https://randomuser.me/api/portraits/men/21.jpg",
+    "emotion": "sad",
+    "timestamp": "2025-07-08T12:10:00Z"
+  },
+  {
+    "img": "https://randomuser.me/api/portraits/men/32.jpg",
+    "emotion": "angry",
+    "timestamp": "2025-07-07T18:45:00Z"
+  },
+  {
+    "img": "https://randomuser.me/api/portraits/men/43.jpg",
+    "emotion": "surprised",
+    "timestamp": "2025-07-07T08:30:00Z"
+  },
+  {
+    "img": "https://randomuser.me/api/portraits/men/54.jpg",
+    "emotion": "neutral",
+    "timestamp": "2025-07-06T16:05:00Z"
+  }
+]
