@@ -47,7 +47,10 @@ function Upload() {
             const formData = new FormData(form);
             // You can use formData to send the data to a server
 
-            fetch("./ajax/analyze.json")
+            fetch("http://127.0.0.1:8000/analyze", {
+                method: "POST",
+                body: formData
+            })
                 .then(response => response.json()) // parses JSON string into JS array
                 .then(data => {
                     setResult(data);

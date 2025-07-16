@@ -6,8 +6,8 @@ function History() {
     const [history, setHistory] = useState(<></>);
 
     function getHistory() {
-        fetch('./ajax/getHistory.json')
-            .then(response => response.json()) // parses JSON string into JS array
+        fetch('ajax/getHistory.json')
+            .then(response => response.json())
             .then(data => {
                 data = data.map((entry) => {
                     return (
