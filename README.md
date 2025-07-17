@@ -1,70 +1,113 @@
-# Getting Started with Create React App
+# Emotions Detector
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web application that detects emotions from text input using a FastAPI backend and a modern web frontend.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+- Python 3.8 or higher
+- Node.js 16.x or higher
+- npm (comes with Node.js)
 
-### `npm start`
+## Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- `/API` - Contains the FastAPI backend code
+- `/public` - Static files served by the frontend
+- `/src` - Frontend source code
+- `/node_modules` - Node.js dependencies (created after running npm install)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Setup Instructions
 
-### `npm test`
+### 1. Backend Setup
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Navigate to the API directory:
+   ```bash
+   cd API
+   ```
 
-### `npm run build`
+2. Create a virtual environment (recommended):
+   ```bash
+   python -m venv .venv
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. Activate the virtual environment:
+   - On Windows:
+     ```bash
+     .\.venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```bash
+     source .venv/bin/activate
+     ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+5. Set up the database:
+   - The application uses SQLite with a file named `database.db`
+   - The database file will be automatically created in the API directory when you first run the application
+   - If you need to reset the database, simply restart the application
 
-### `npm run eject`
+### 2. Frontend Setup
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Navigate to the project root directory:
+   ```bash
+   cd ..
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. Install Node.js dependencies:
+   ```bash
+   npm install
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Running the Application
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Start the Backend
 
-## Learn More
+1. Make sure you're in the API directory and the virtual environment is activated
+2. Run the FastAPI server:
+   ```bash
+   uvicorn app:app --reload
+   ```
+   The API will be available at `http://localhost:8000`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Start the Frontend
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. In a new terminal, navigate to the project root directory
+2. Start the development server:
+   ```bash
+   npm start
+   ```
+   The application will be available at `http://localhost:3000`
 
-### Code Splitting
+[//]: # (## Environment Variables)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+[//]: # ()
+[//]: # (Set up your environment variables in your preferred way, such as directly in your shell or through your IDE's run configuration. The application expects the following variables to be available:)
 
-### Analyzing the Bundle Size
+[//]: # ()
+[//]: # (```)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+[//]: # (DATABASE_URL=sqlite:///./database.db)
 
-### Making a Progressive Web App
+[//]: # (SECRET_KEY=your_secret_key)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+[//]: # (```)
 
-### Advanced Configuration
+[//]: # (## API Endpoints)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+[//]: # ()
+[//]: # (- `POST /analyze` - Analyze text for emotions)
 
-### Deployment
+[//]: # (- `GET /history` - Get analysis history)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Development
 
-### `npm run build` fails to minify
+- Frontend: React (JavaScript/TypeScript)
+- Backend: FastAPI (Python)
+- Database: SQLite
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+[//]: # (## License)
+
+[//]: # (This project is licensed under the MIT License - see the [LICENSE]&#40;LICENSE&#41; file for details.)
