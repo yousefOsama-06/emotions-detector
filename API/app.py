@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
-DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
+DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
 # CORS for frontend
 app.add_middleware(
@@ -25,17 +25,21 @@ conn = sqlite3.connect(DB_PATH)
 conn.executescript(schema)
 conn.close()
 
+
 def hash_password(password, salt):
     return hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+
 
 class RegisterRequest(BaseModel):
     username: str
     email: EmailStr
     password: str
 
+
 class LoginRequest(BaseModel):
     username: str
     password: str
+
 
 @app.post('/register')
 def register(req: RegisterRequest):
@@ -57,6 +61,7 @@ def register(req: RegisterRequest):
     except sqlite3.IntegrityError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
+
 @app.post('/login')
 def login(req: LoginRequest):
     username = req.username.strip()
@@ -76,4 +81,4 @@ def login(req: LoginRequest):
     else:
         raise HTTPException(status_code=401, detail='Invalid username or password')
 
-# To run: uvicorn API.app:app --reload 
+# To run: uvicorn API.app:app --reload
