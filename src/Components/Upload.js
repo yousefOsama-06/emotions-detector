@@ -3,7 +3,6 @@ import Analysis from "./Analysis";
 
 function Upload() {
     const [error, setError] = useState("");
-    const [borderColor, setBorderColor] = useState('black');
     const [imgSrc, setImgSrc] = useState("null");
     const [dragActive, setDragActive] = useState(false);
     const [showWebcam, setShowWebcam] = useState(false);
@@ -15,7 +14,6 @@ function Upload() {
     function validateLength(input) {
         const value = input.value;
         const isValid = value.length >= 3;
-        setBorderColor(isValid ? "" : "red");
         setError(isValid ? "" : "Username is too short.");
         return isValid;
     }
