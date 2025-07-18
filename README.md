@@ -17,7 +17,14 @@ A web application that detects emotions from text input using a FastAPI backend 
 
 ## Setup Instructions
 
-### 1. Backend Setup
+### 1. Frontend Setup
+
+1. Install Node.js dependencies:
+   ```bash
+   npm install
+   ```
+
+### 2. Backend Setup
 
 1. Navigate to the API directory:
    ```bash
@@ -48,18 +55,6 @@ A web application that detects emotions from text input using a FastAPI backend 
    - The application uses SQLite with a file named `database.db`
    - The database file will be automatically created in the API directory when you first run the application
    - If you need to reset the database, simply restart the application
-
-### 2. Frontend Setup
-
-1. Navigate to the project root directory:
-   ```bash
-   cd ..
-   ```
-
-2. Install Node.js dependencies:
-   ```bash
-   npm install
-   ```
 
 ## Running the Application
 

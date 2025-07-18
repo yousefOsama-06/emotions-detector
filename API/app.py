@@ -2,14 +2,24 @@ import os
 import sqlite3
 import hashlib
 import secrets
-from fastapi import FastAPI, HTTPException
+import jwt
+import datetime
+
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
-# CORS for frontend
+# python -c "import secrets; print(secrets.token_urlsafe(32))"
+SECRET_KEY = "majyT3QhVBB_BtqDy4aeBMble7Tu25k2ToJw9ToDr_8"
+ALGORITHM = "HS256"
+TOKEN_EXPIRE_HOURS = 1
+
+security = HTTPBearer()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,7 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure DB exists and has schema
 with open(os.path.join(os.path.dirname(__file__), 'schema.sql')) as f:
     schema = f.read()
 conn = sqlite3.connect(DB_PATH)
@@ -28,6 +37,25 @@ conn.close()
 
 def hash_password(password, salt):
     return hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+
+
+def create_access_token(user_id: int):
+    payload = {
+        "sub": str(user_id),
+        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=TOKEN_EXPIRE_HOURS)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return int(payload["sub"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 class RegisterRequest(BaseModel):
@@ -70,15 +98,30 @@ def login(req: LoginRequest):
         raise HTTPException(status_code=400, detail='Empty fields')
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute('SELECT password_hash, salt FROM users WHERE username = ?', (username,))
+    cur.execute('SELECT id, password_hash, salt FROM users WHERE username = ?', (username,))
     row = cur.fetchone()
     conn.close()
     if not row:
         raise HTTPException(status_code=401, detail='Invalid username or password')
-    password_hash, salt = row
+    user_id, password_hash, salt = row
     if hash_password(password, salt) == password_hash:
-        return {"success": True}  # JWT to be added later
+        token = create_access_token(user_id)
+        return {"success": True, "token": token}
     else:
         raise HTTPException(status_code=401, detail='Invalid username or password')
 
-# To run: uvicorn API.app:app --reload
+
+@app.post('/mood')
+async def add_mood(request: Request, user_id: int = Depends(verify_token)):
+    data = await request.json()
+    mood = data.get('mood')
+    image_path = data.get('image_path', '')
+    if not mood:
+        raise HTTPException(status_code=400, detail='Mood is required')
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('INSERT INTO moods (user_id, image_path, mood, timestamp) VALUES (?, ?, ?, datetime("now"))',
+                (user_id, image_path, mood))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "Mood submitted"}
