@@ -34,9 +34,8 @@
 }
 
 /* Auth card input fields: consistent style for all types */
-.auth-card input[type="text"],
-.auth-card input[type="email"],
-.auth-card input[type="password"] {
+.auth-card input,
+.auth-card input {
   margin-bottom: 8px;
   width: 100%;
   min-width: 220px;
@@ -52,9 +51,8 @@
   display: block;
   box-sizing: border-box;
 }
-.auth-card input[type="text"]:focus,
-.auth-card input[type="email"]:focus,
-.auth-card input[type="password"]:focus {
+.auth-card input:focus,
+.auth-card input:focus {
   border-color: var(--accent-dark);
   box-shadow: 0 0 0 2px var(--accent-dark)33;
   outline: none;
@@ -145,16 +143,14 @@ body.dark-mode {
 }
 
 /* Dark mode for auth card input fields */
-.dark-mode .auth-card input[type="text"],
-.dark-mode .auth-card input[type="email"],
-.dark-mode .auth-card input[type="password"] {
+.dark-mode .auth-card input,
+.dark-mode .auth-card input {
   background: #181a20;
   color: var(--dark-primary);
   border: 1.5px solid #b8c1ec;
 }
-.dark-mode .auth-card input[type="text"]:focus,
-.dark-mode .auth-card input[type="email"]:focus,
-.dark-mode .auth-card input[type="password"]:focus {
+.dark-mode .auth-card input:focus,
+.dark-mode .auth-card input:focus {
   border-color: var(--dark-accent-dark);
   box-shadow: 0 0 0 2px var(--dark-accent-dark)33;
 }
@@ -256,7 +252,7 @@ section {
   to { opacity: 1; transform: translateY(0); }
 }
 
-input[type="text"], input[type="email"], input[type="password"], input[type="file"] {
+input {
   padding: 14px 16px;
   border: 1.5px solid #d1e3ee;
   border-radius: var(--radius);
@@ -269,14 +265,10 @@ input[type="text"], input[type="email"], input[type="password"], input[type="fil
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="file"]:focus {
+input:focus {
   border-color: var(--accent-dark);
   box-shadow: 0 0 0 2px var(--accent-dark)33;
   outline: none;
-}
-
-input[type="text"].invalid {
-  border: 2px solid #ff4d4d;
 }
 
 #preview-image {
@@ -483,14 +475,14 @@ body:not(.dark-mode) #dark-mode-toggle .icon-moon {
 .dark-mode #upload-section h2 {
   color: var(--dark-primary);
 }
-.dark-mode #upload-form input[type="text"],
-.dark-mode #upload-form input[type="file"] {
+.dark-mode #upload-form input,
+.dark-mode #upload-form input {
   background: #181a20;
   color: var(--dark-primary);
   border: 1.5px solid #b8c1ec;
 }
-.dark-mode #upload-form input[type="text"]:focus,
-.dark-mode #upload-form input[type="file"]:focus {
+.dark-mode #upload-form input:focus,
+.dark-mode #upload-form input:focus {
   border-color: var(--dark-accent-dark);
   box-shadow: 0 0 0 2px var(--dark-accent-dark)33;
 }
@@ -606,12 +598,15 @@ body:not(.dark-mode) #dark-mode-toggle .icon-moon {
 }
 
 .webcam-modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  /*position: absolute;*/
+  /*top: 0; left: 0; right: 0;;*/
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   background: rgba(0,0,0,0.45);
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 .webcam-content {

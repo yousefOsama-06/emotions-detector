@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import {useState, useRef} from "react";
 import Analysis from "./Analysis";
 
 function Upload() {
@@ -94,8 +94,9 @@ function Upload() {
     // Webcam logic
     async function openWebcam() {
         setShowWebcam(true);
+
         try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const mediaStream = await navigator.mediaDevices.getUserMedia({video: true});
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
@@ -131,14 +132,15 @@ function Upload() {
         <>
             <section id="upload-section">
                 <h2>Upload a Picture</h2>
-                <div id="error-message" style={{ color: "red" }}>{error}</div>
-                <form id="upload-form" onSubmit={e => e.preventDefault()}>
-                    <label htmlFor="username"></label>
-                    <input type="text" id="username" name="username" placeholder="Enter your name"
-                        style={{ borderColor: borderColor }}
-                        onChange={(e) => validateLength(e.target)} />
-                    <br /><br />
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div id="error-message" style={{color: "red"}}>{error}</div>
+                {!showWebcam && (<form id="upload-form" onSubmit={e => e.preventDefault()}>
+                    <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexWrap: 'wrap'
+                    }}>
                         <div
                             className={`dropzone${dragActive ? " active" : ""}`}
                             onClick={openFileDialog}
@@ -155,37 +157,54 @@ function Upload() {
                                 name="image"
                                 accept="image/*"
                                 ref={inputRef}
-                                style={{ display: "none" }}
+                                style={{display: "none"}}
                                 onChange={handleFileChange}
                             />
                             <div className="dropzone-content">
-                                <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l2 2 4-4"/><path d="M16 16h.01"/></svg>
+                                <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth="2"
+                                     strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="18" height="18" rx="4"/>
+                                    <path d="M8 12l2 2 4-4"/>
+                                    <path d="M16 16h.01"/>
+                                </svg>
                                 <span>Drag & drop or <u>click</u> to select an image</span>
                             </div>
                         </div>
-                        <button type="button" className="webcam-btn" onClick={openWebcam} aria-label="Take a photo from webcam">
-                            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="3.5"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            <span style={{ marginLeft: 6 }}>Take Photo</span>
+                        <button type="button" className="webcam-btn" onClick={openWebcam}
+                                aria-label="Take a photo from webcam">
+                            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2"
+                                 strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                <rect x="3" y="7" width="18" height="13" rx="3"/>
+                                <circle cx="12" cy="13.5" r="3.5"/>
+                                <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            <span style={{marginLeft: 6}}>Take Photo</span>
                         </button>
                     </div>
-                    {showWebcam && (
-                        <div className="webcam-modal">
-                            <div className="webcam-content">
-                                <video ref={videoRef} autoPlay playsInline style={{ width: '100%', borderRadius: '12px' }} />
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '10px' }}>
-                                    <button type="button" className="webcam-capture-btn" onClick={capturePhoto}>Capture</button>
-                                    <button type="button" className="webcam-cancel-btn" onClick={closeWebcam}>Cancel</button>
-                                </div>
-                                <canvas ref={canvasRef} style={{ display: 'none' }} />
-                            </div>
-                        </div>
-                    )}
                     {imgSrc && imgSrc !== "null" && (
-                        <img id="preview-image" src={imgSrc} alt="preview" style={{ maxWidth: '300px', marginTop: '10px' }} />
+                        <img id="preview-image" src={imgSrc} alt="preview"
+                             style={{maxWidth: '300px', marginTop: '10px'}}/>
                     )}
-                    <br />
+                    <br/>
                     <button type="button" id="submit-btn" onClick={analyze}>Analyze Emotion</button>
-                </form>
+                </form>)}
+                {showWebcam && (
+                    <div className="webcam-modal">
+                        <div className="webcam-content">
+                            <video ref={videoRef} autoPlay playsInline
+                                   style={{maxWidth: '100%', maxHeight: '100%', borderRadius: '12px'}}/>
+                            <div
+                                style={{display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '10px'}}>
+                                <button type="button" className="webcam-capture-btn"
+                                        onClick={capturePhoto}>Capture
+                                </button>
+                                <button type="button" className="webcam-cancel-btn" onClick={closeWebcam}>Cancel
+                                </button>
+                            </div>
+                            <canvas ref={canvasRef} style={{display: 'none'}}/>
+                        </div>
+                    </div>
+                )}
             </section>
             <Analysis>
                 {result}
