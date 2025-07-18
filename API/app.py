@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
+from starlette.responses import JSONResponse
 
 app = FastAPI()
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
@@ -111,17 +112,12 @@ def login(req: LoginRequest):
         raise HTTPException(status_code=401, detail='Invalid username or password')
 
 
-@app.post('/mood')
-async def add_mood(request: Request, user_id: int = Depends(verify_token)):
-    data = await request.json()
-    mood = data.get('mood')
-    image_path = data.get('image_path', '')
-    if not mood:
-        raise HTTPException(status_code=400, detail='Mood is required')
+@app.get('/moods')
+async def get_moods(user_id: int = Depends(verify_token)):
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # This enables name-based access to columns
     cur = conn.cursor()
-    cur.execute('INSERT INTO moods (user_id, image_path, mood, timestamp) VALUES (?, ?, ?, datetime("now"))',
-                (user_id, image_path, mood))
-    conn.commit()
+    cur.execute('SELECT * FROM moods WHERE user_id = ? ORDER BY timestamp DESC', (user_id,))
+    moods = [dict(row) for row in cur.fetchall()]
     conn.close()
-    return {"success": True, "message": "Mood submitted"}
+    return moods
