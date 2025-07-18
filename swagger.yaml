@@ -1,0 +1,228 @@
+openapi: 3.0.0
+info:
+  title: Mood Tracker API
+  version: 1.0.0
+
+paths:
+  /register:
+    post:
+      summary: Register
+      operationId: register_register_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+
+  /login:
+    post:
+      summary: Login
+      operationId: login_login_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+
+  /moods:
+    get:
+      summary: Fetch all mood entries for the authenticated user
+      security:
+        - HTTPBearer: []
+      responses:
+        '200':
+          description: List of moods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    emotion:
+                      type: string
+                    img:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: date-time
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Upload image and detect emotion
+      description: Uploads an image, stores it in the cloud, analyzes it with a model, and returns the detected emotion.
+      security:
+        - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img:
+                  type: string
+                  format: binary
+              required: [img]
+      responses:
+        '200':
+          description: Emotion detected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emotion:
+                    type: string
+                    example: happy
+                  img_url:
+                    type: string
+                    example: https://cloud.example.com/moods/abc123.jpg
+        '400':
+          description: Invalid image or analysis error
+        '401':
+          description: Unauthorized
+
+  /profile/me:
+    get:
+      summary: Get the profile of the current user
+      security:
+        - HTTPBearer: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: string
+                  email:
+                    type: string
+        '401':
+          description: Unauthorized
+
+  /moods/{mood_id}:
+    delete:
+      summary: Delete a specific mood
+      security:
+        - HTTPBearer: []
+      parameters:
+        - in: path
+          name: mood_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Mood deleted
+        '404':
+          description: Mood not found
+        '401':
+          description: Unauthorized
+
+  /users/me:
+    delete:
+      summary: Delete the authenticated user and their moods
+      security:
+        - HTTPBearer: []
+      responses:
+        '204':
+          description: User deleted
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+
+  schemas:
+    RegisterRequest:
+      type: object
+      title: RegisterRequest
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          title: Username
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          title: Password
+
+    LoginRequest:
+      type: object
+      title: LoginRequest
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          title: Password
+
+    HTTPValidationError:
+      type: object
+      title: HTTPValidationError
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    ValidationError:
+      type: object
+      title: ValidationError
+      required: [loc, msg, type]
+      properties:
+        loc:
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
