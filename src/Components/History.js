@@ -6,7 +6,7 @@ function History() {
     const [history, setHistory] = useState(<></>);
 
     function getHistory() {
-        fetch('ajax/getHistory.json')
+        fetch('localhost:8000/analyze-image')
             .then(response => response.json())
             .then(data => {
                 data = data.map((entry) => {
