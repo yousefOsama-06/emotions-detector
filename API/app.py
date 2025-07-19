@@ -71,17 +71,48 @@ def create_access_token(user_id: int):
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_token(request: Request):
+def verify_token(request: Request) -> int:
+    # Check if token exists in cookies
     token = request.cookies.get("token")
     if not token:
-        raise HTTPException(status_code=401, detail="Token not found")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return int(payload["sub"])
+        # Verify and decode the token
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_exp": True}  # Explicitly enable expiration check
+        )
+
+        # Verify we have a valid user ID
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute('SELECT id FROM users WHERE id = ?', (user_id,))
+        user = cur.fetchone()
+        conn.close()
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        return int(user_id)
+
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError as e:
         raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        # Catch any other JWT-related errors
+        raise e
 
 
 class RegisterRequest(BaseModel):
