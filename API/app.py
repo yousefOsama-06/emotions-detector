@@ -95,7 +95,6 @@ def verify_token(request: Request) -> int:
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token payload")
 
-
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
         cur.execute('SELECT id FROM users WHERE id = ?', (user_id,))
@@ -177,6 +176,12 @@ def login(response: Response, req: LoginRequest):
         raise HTTPException(status_code=401, detail='Invalid username or password')
 
 
+@app.post('/logout')
+async def logout(response: Response):
+    response.delete_cookie("token")
+    return {"success": True}
+
+
 @app.get('/moods')
 async def get_moods(user_id: int = Depends(verify_token)):
     conn = sqlite3.connect(DB_PATH)
@@ -221,7 +226,27 @@ async def analyze_image(
     }
 
 
-from fastapi import Path
+@app.get("/profile/me")
+def get_profile(user_id: int = Depends(verify_token)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
+    conn.close()
+    return user
+
+
+@app.delete("delete/user/me")
+def deactivate_user(user_id: int = Depends(verify_token)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"success": True}
 
 
 @app.delete("/moods/{mood_id}")
