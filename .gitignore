@@ -26,5 +26,5 @@ yarn-error.log*
 
 
 # SQLite database files
-API/database.db
-API/database.db-*
+/API/database.db
+/API/database.db-*

@@ -1,7 +1,6 @@
 import {useState, useRef} from "react";
-import Analysis from "./Analysis";
 
-function Upload() {
+function Upload({setResult}) {
     const [error, setError] = useState("");
     const [imgSrc, setImgSrc] = useState("null");
     const [dragActive, setDragActive] = useState(false);
@@ -60,7 +59,6 @@ function Upload() {
         return true;
     }
 
-    const [result, setResult] = useState({});
 
     async function analyze() {
         setResult({});
@@ -202,9 +200,6 @@ function Upload() {
                     </div>
                 )}
             </section>
-            <Analysis>
-                {result}
-            </Analysis>
         </>
     );
 }

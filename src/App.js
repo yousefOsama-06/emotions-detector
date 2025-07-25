@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react";
 import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
 import Upload from "./Components/Upload";
+import Analysis from "./Components/Analysis";
 import History from "./Components/History";
 import Login from "./Components/Login";
 import Signup from "./Components/Signup";
@@ -18,11 +19,7 @@ function App() {
     }, [darkMode]);
 
 
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    const handleLoginSuccess = () => {
-        setIsLoggedIn(!isLoggedIn);
-    };
+    const [result, setResult] = useState({});
 
     return (
         <Router>
@@ -77,9 +74,14 @@ function App() {
                 </header>
 
                 <Routes>
-                    <Route path="/" element={<Upload/>}/>
+                    <Route path="/" element={
+                        <>
+                            <Upload setResult={setResult}/>
+                            <Analysis>{result}</Analysis>
+                        </>
+                    }/>
                     <Route path="/history" element={<History/>}/>
-                    <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess}/>}/>
+                    <Route path="/login" element={<Login/>}/>
                     <Route path="/signup" element={<Signup/>}/>
                 </Routes>
 

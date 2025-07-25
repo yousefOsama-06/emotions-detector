@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 
 
-function Login({onLoginSuccess}) {
+function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
@@ -17,7 +17,6 @@ function Login({onLoginSuccess}) {
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                onLoginSuccess();
                 alert("Logged in successfully");
             } else {
                 alert(data.error || "Login failed");
