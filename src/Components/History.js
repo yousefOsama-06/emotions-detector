@@ -6,14 +6,17 @@ function History() {
     const [history, setHistory] = useState(<></>);
 
     function getHistory() {
-        fetch('ajax/getHistory.json')
+        fetch('http://localhost:8000/moods', {
+            method: "GET",
+            credentials: "include"
+        })
             .then(response => response.json())
             .then(data => {
                 data = data.map((entry) => {
                     return (
                         <tr key={entry.timestamp}>
-                            <td><img src={entry.img} alt={"img"}/></td>
-                            <td>{entry.emotion}</td>
+                            <td><img src={entry.image_data} alt={"img"}/></td>
+                            <td>{entry.mood}</td>
                             <td>{new Date(entry.timestamp).toLocaleString()}</td>
                         </tr>
                     );

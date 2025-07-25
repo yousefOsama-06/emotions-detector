@@ -11,13 +11,6 @@ function Upload() {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
-    function validateLength(input) {
-        const value = input.value;
-        const isValid = value.length >= 3;
-        setError(isValid ? "" : "Username is too short.");
-        return isValid;
-    }
-
     function preview(file) {
         if (file) {
             const reader = new FileReader();
@@ -59,9 +52,8 @@ function Upload() {
     }
 
     function check() {
-        const username = document.getElementById("username");
-        if (!imgSrc || imgSrc === "null" || !validateLength(username)) {
-            setError("Both username and image are required");
+        if (!imgSrc || imgSrc === "null") {
+            setError("An image is required");
             return false;
         }
         setError("");
@@ -70,20 +62,26 @@ function Upload() {
 
     const [result, setResult] = useState({});
 
-    function analyze() {
+    async function analyze() {
         setResult({});
         if (check()) {
-            const form = document.getElementById('upload-form')
-            const formData = new FormData(form);
+            const formData = new FormData();
+            const base64Response = await fetch(imgSrc);
+            const blob = await base64Response.blob();
+
+            // Create a file from the blob
+            const file = new File([blob], "image.jpg", {type: "image/jpeg"});
+            formData.append("photo", file);
             // You can use formData to send the data to a server
 
-            fetch("http://127.0.0.1:8000/analyze", {
+            fetch("http://localhost:8000/analyze-image", {
                 method: "POST",
-                body: formData
+                body: formData,
+                credentials: "include"
             })
                 .then(response => response.json()) // parses JSON string into JS array
                 .then(data => {
-                    setResult(data);
+                    setResult(data.analysis);
                 })
                 .catch(error => console.error('Error fetching data:', error));
         }
@@ -180,7 +178,7 @@ function Upload() {
                         </button>
                     </div>
                     {imgSrc && imgSrc !== "null" && (
-                        <img id="preview-image" src={imgSrc} alt="preview"
+                        <img id="preview-image" name="preview-image" src={imgSrc} alt="preview"
                              style={{maxWidth: '300px', marginTop: '10px'}}/>
                     )}
                     <br/>

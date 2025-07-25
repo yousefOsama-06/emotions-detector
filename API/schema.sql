@@ -8,6 +8,7 @@ CREATE TABLE users (
         CONSTRAINT username_unique UNIQUE,
     email TEXT NOT NULL
         CONSTRAINT email_unique UNIQUE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL
 );

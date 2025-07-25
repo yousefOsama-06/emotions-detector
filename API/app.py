@@ -1,3 +1,4 @@
+import base64
 import os
 import sqlite3
 import hashlib
@@ -5,11 +6,14 @@ import secrets
 import jwt
 import datetime
 
-from fastapi import FastAPI, HTTPException, Request, Depends
+import uuid
+import shutil
+
+from fastapi import FastAPI, HTTPException, Request, Depends, UploadFile, File, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 app = FastAPI()
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
@@ -23,17 +27,37 @@ security = HTTPBearer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-with open(os.path.join(os.path.dirname(__file__), 'schema.sql')) as f:
-    schema = f.read()
-conn = sqlite3.connect(DB_PATH)
-conn.executescript(schema)
-conn.close()
+photo_dir = os.path.join(os.path.dirname(__file__), "uploaded_photos")
+os.makedirs(photo_dir, exist_ok=True)
+
+
+def clear_database():
+    # Clear uploaded_photos directory
+    for filename in os.listdir(photo_dir):
+        file_path = os.path.join(photo_dir, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
+
+    # clear database
+    with open(os.path.join(os.path.dirname(__file__), 'schema.sql')) as f:
+        schema = f.read()
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript(schema)
+    conn.close()
+
+
+clear_database()
 
 
 def hash_password(password, salt):
@@ -48,15 +72,47 @@ def create_access_token(user_id: int):
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+def verify_token(request: Request) -> int:
+    # Check if token exists in cookies
+    token = request.cookies.get("token")
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return int(payload["sub"])
+        # Verify and decode the token
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_exp": True}  # Explicitly enable expiration check
+        )
+
+        # Verify we have a valid user ID
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute('SELECT id FROM users WHERE id = ?', (user_id,))
+        user = cur.fetchone()
+        conn.close()
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        return int(user_id)
+
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError as e:
         raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        # Catch any other JWT-related errors
+        raise e
 
 
 class RegisterRequest(BaseModel):
@@ -85,14 +141,16 @@ def register(req: RegisterRequest):
         cur.execute('INSERT INTO users (username, email, password_hash, salt) VALUES (?, ?, ?, ?)',
                     (username, email, password_hash, salt))
         conn.commit()
-        conn.close()
         return {"success": True}
     except sqlite3.IntegrityError as e:
         raise HTTPException(status_code=409, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
 
 
 @app.post('/login')
-def login(req: LoginRequest):
+def login(response: Response, req: LoginRequest):
     username = req.username.strip()
     password = req.password.strip()
     if username == '' or password == '':
@@ -107,9 +165,78 @@ def login(req: LoginRequest):
     user_id, password_hash, salt = row
     if hash_password(password, salt) == password_hash:
         token = create_access_token(user_id)
+        response.set_cookie(
+            key="token",
+            value=token,
+            httponly=True,
+            samesite="lax",
+            secure=False
+        )
         return {"success": True, "token": token}
     else:
         raise HTTPException(status_code=401, detail='Invalid username or password')
+
+
+@app.post('/logout')
+async def logout(response: Response):
+    response.delete_cookie("token")
+    return {"success": True}
+
+
+@app.get("/profile/me")
+def get_profile(user_id: int = Depends(verify_token)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
+    conn.close()
+    return user
+
+
+@app.delete("delete/user/me")
+def deactivate_user(user_id: int = Depends(verify_token)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"success": True}
+
+
+@app.post("/analyze-image")
+async def analyze_image(
+        photo: UploadFile = File(...),
+        user_id: int = Depends(verify_token)
+):
+    file_extension = os.path.splitext(photo.filename)[1]
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+    full_path = os.path.join(photo_dir, unique_filename)
+    with open(full_path, "wb") as f:
+        f.write(await photo.read())
+
+    mood = "happy"
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO moods (user_id, image_path, mood, timestamp) VALUES (?, ?, ?, ?)",
+        (user_id, full_path, mood, timestamp)
+    )
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "image_saved_as": unique_filename,
+        "analysis": {
+            "Mood": mood,
+            "Advice": "You look happy!",
+        }
+    }
 
 
 @app.get('/moods')
@@ -118,6 +245,45 @@ async def get_moods(user_id: int = Depends(verify_token)):
     conn.row_factory = sqlite3.Row  # This enables name-based access to columns
     cur = conn.cursor()
     cur.execute('SELECT * FROM moods WHERE user_id = ? ORDER BY timestamp DESC', (user_id,))
-    moods = [dict(row) for row in cur.fetchall()]
+    moods = []
+    for row in cur.fetchall():
+        mood = dict(row)
+        try:
+            with open(mood['image_path'], "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+                # Add the base64 encoded image to the mood data
+                mood['image_data'] = f"data:image/jpeg;base64,{encoded_image}"
+        except Exception as e:
+            print(f"Error reading image {mood['image_path']}: {str(e)}")
+            mood['image_data'] = "null"
+        moods.append(mood)
     conn.close()
     return moods
+
+
+@app.delete("/moods/{mood_id}")
+def delete_mood(
+        mood_id: int = Path(..., description="ID of the mood to delete"),
+        user_id: int = Depends(verify_token)
+):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # This enables name-based access to columns
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM moods WHERE id = ? AND user_id = ?", (mood_id, user_id))
+    mood = cur.fetchone()
+
+    if not mood:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Mood not found or unauthorized")
+
+    if mood["image_path"] and os.path.exists(mood["image_path"]):
+        try:
+            os.remove(mood["image_path"])
+        except Exception:
+            pass
+    cur.execute("DELETE FROM moods WHERE id = ?", (mood_id,))
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "message": f"Mood with ID {mood_id} deleted successfully"}

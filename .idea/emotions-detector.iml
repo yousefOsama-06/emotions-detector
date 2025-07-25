@@ -2,7 +2,13 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/API/.venv/Include" />
+      <excludeFolder url="file://$MODULE_DIR$/API/.venv/Lib" />
+      <excludeFolder url="file://$MODULE_DIR$/API/.venv/Scripts" />
+      <excludeFolder url="file://$MODULE_DIR$/API/uploaded_photos" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/API/.idea/dataSources" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
