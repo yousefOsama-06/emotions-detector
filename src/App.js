@@ -78,7 +78,7 @@ function App() {
 
                 <Routes>
                     <Route path="/" element={<Upload/>}/>
-                    <Route path="/history" element={<History isLoggedIn={isLoggedIn}/>}/>
+                    <Route path="/history" element={<History/>}/>
                     <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess}/>}/>
                     <Route path="/signup" element={<Signup/>}/>
                 </Routes>

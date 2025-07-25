@@ -1,13 +1,12 @@
 import {useEffect, useState} from "react";
 
 
-function History({isLoggedIn}) {
+function History() {
 
     const [history, setHistory] = useState(<></>);
 
     function getHistory() {
-        if (!isLoggedIn) return;
-        fetch('localhost:8000/moods', {
+        fetch('http://localhost:8000/moods', {
             method: "GET",
             credentials: "include"
         })
@@ -16,8 +15,8 @@ function History({isLoggedIn}) {
                 data = data.map((entry) => {
                     return (
                         <tr key={entry.timestamp}>
-                            <td><img src={entry.img} alt={"img"}/></td>
-                            <td>{entry.emotion}</td>
+                            <td><img src={entry.image_data} alt={"img"}/></td>
+                            <td>{entry.mood}</td>
                             <td>{new Date(entry.timestamp).toLocaleString()}</td>
                         </tr>
                     );
@@ -27,7 +26,7 @@ function History({isLoggedIn}) {
             .catch(error => console.error('Error fetching data:', error));
     }
 
-    useEffect(getHistory, [isLoggedIn]);
+    useEffect(getHistory, []);
     return (
         <section id="history-section">
             <h2>Scan History</h2>

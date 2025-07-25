@@ -1,3 +1,4 @@
+import base64
 import os
 import sqlite3
 import hashlib
@@ -182,15 +183,27 @@ async def logout(response: Response):
     return {"success": True}
 
 
-@app.get('/moods')
-async def get_moods(user_id: int = Depends(verify_token)):
+@app.get("/profile/me")
+def get_profile(user_id: int = Depends(verify_token)):
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # This enables name-based access to columns
     cur = conn.cursor()
-    cur.execute('SELECT * FROM moods WHERE user_id = ? ORDER BY timestamp DESC', (user_id,))
-    moods = [dict(row) for row in cur.fetchall()]
+    cur.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
     conn.close()
-    return moods
+    return user
+
+
+@app.delete("delete/user/me")
+def deactivate_user(user_id: int = Depends(verify_token)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"success": True}
 
 
 @app.post("/analyze-image")
@@ -226,27 +239,26 @@ async def analyze_image(
     }
 
 
-@app.get("/profile/me")
-def get_profile(user_id: int = Depends(verify_token)):
+@app.get('/moods')
+async def get_moods(user_id: int = Depends(verify_token)):
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # This enables name-based access to columns
     cur = conn.cursor()
-    cur.execute("SELECT username FROM users WHERE id = ?", (user_id,))
-    user = cur.fetchone()
-    if not user:
-        conn.close()
-        raise HTTPException(status_code=404, detail="User not found")
+    cur.execute('SELECT * FROM moods WHERE user_id = ? ORDER BY timestamp DESC', (user_id,))
+    moods = []
+    for row in cur.fetchall():
+        mood = dict(row)
+        try:
+            with open(mood['image_path'], "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+                # Add the base64 encoded image to the mood data
+                mood['image_data'] = f"data:image/jpeg;base64,{encoded_image}"
+        except Exception as e:
+            print(f"Error reading image {mood['image_path']}: {str(e)}")
+            mood['image_data'] = "null"
+        moods.append(mood)
     conn.close()
-    return user
-
-
-@app.delete("delete/user/me")
-def deactivate_user(user_id: int = Depends(verify_token)):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    conn.commit()
-    conn.close()
-    return {"success": True}
+    return moods
 
 
 @app.delete("/moods/{mood_id}")
