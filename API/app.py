@@ -197,7 +197,7 @@ def get_profile(user_id: int = Depends(verify_token)):
 
 
 @app.delete("delete/user/me")
-def deactivate_user(user_id: int = Depends(verify_token)):
+def delete_user(user_id: int = Depends(verify_token)):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
