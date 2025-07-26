@@ -157,12 +157,12 @@ def login(response: Response, req: LoginRequest):
         raise HTTPException(status_code=400, detail='Empty fields')
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute('SELECT id, password_hash, salt FROM users WHERE username = ?', (username,))
+    cur.execute('SELECT id, password_hash, salt, email FROM users WHERE username = ?', (username,))
     row = cur.fetchone()
     conn.close()
     if not row:
         raise HTTPException(status_code=401, detail='Invalid username or password')
-    user_id, password_hash, salt = row
+    user_id, password_hash, salt, email = row
     if hash_password(password, salt) == password_hash:
         token = create_access_token(user_id)
         response.set_cookie(
@@ -172,7 +172,15 @@ def login(response: Response, req: LoginRequest):
             samesite="lax",
             secure=False
         )
-        return {"success": True, "token": token}
+        return {
+            "success": True, 
+            "token": token,
+            "user": {
+                "id": user_id,
+                "username": username,
+                "email": email
+            }
+        }
     else:
         raise HTTPException(status_code=401, detail='Invalid username or password')
 
@@ -181,6 +189,31 @@ def login(response: Response, req: LoginRequest):
 async def logout(response: Response):
     response.delete_cookie("token")
     return {"success": True}
+
+
+@app.get('/check-auth')
+async def check_auth(request: Request):
+    try:
+        user_id = verify_token(request)
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute("SELECT id, username, email FROM users WHERE id = ?", (user_id,))
+        user = cur.fetchone()
+        conn.close()
+        
+        if user:
+            return {
+                "success": True,
+                "user": {
+                    "id": user[0],
+                    "username": user[1],
+                    "email": user[2]
+                }
+            }
+        else:
+            return {"success": False, "error": "User not found"}
+    except HTTPException:
+        return {"success": False, "error": "Not authenticated"}
 
 
 @app.get("/profile/me")

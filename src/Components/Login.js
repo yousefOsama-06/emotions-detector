@@ -1,28 +1,29 @@
 import React, {useState} from "react";
-
+import { useAuth } from "./AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
-        try {
-            const res = await fetch("http://localhost:8000/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({username, password}),
-                credentials: "include"
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                alert("Logged in successfully");
-            } else {
-                alert(data.error || "Login failed");
-            }
-        } catch (err) {
-            alert("Login failed: " + err.message);
+        if (!username || !password) {
+            alert("Please fill in all fields");
+            return;
+        }
+        
+        setLoading(true);
+        const result = await login(username, password);
+        setLoading(false);
+        
+        if (result.success) {
+            alert("Logged in successfully");
+            navigate("/");
+        } else {
+            alert(result.error || "Login failed");
         }
     };
 
@@ -33,7 +34,9 @@ function Login() {
                 <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)}/><br/>
                 <input type="password" placeholder="Password" value={password}
                        onChange={(e) => setPassword(e.target.value)}/><br/>
-                <button onClick={handleLogin}>Login</button>
+                <button onClick={handleLogin} disabled={loading}>
+                    {loading ? "Logging in..." : "Login"}
+                </button>
             </div>
         </section>
     );
