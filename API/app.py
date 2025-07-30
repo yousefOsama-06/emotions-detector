@@ -15,6 +15,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from starlette.responses import JSONResponse, Response
 
+# LLM
+from API.llm import analyze_history
+
+# CNN
+from fer import FER
+import cv2
+
+detector = FER(mtcnn=True)
+
 app = FastAPI()
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
@@ -57,7 +66,7 @@ def clear_database():
     conn.close()
 
 
-clear_database()
+# clear_database()
 
 
 def hash_password(password, salt):
@@ -173,7 +182,7 @@ def login(response: Response, req: LoginRequest):
             secure=False
         )
         return {
-            "success": True, 
+            "success": True,
             "token": token,
             "user": {
                 "id": user_id,
@@ -200,7 +209,7 @@ async def check_auth(request: Request):
         cur.execute("SELECT id, username, email FROM users WHERE id = ?", (user_id,))
         user = cur.fetchone()
         conn.close()
-        
+
         if user:
             return {
                 "success": True,
@@ -251,7 +260,8 @@ async def analyze_image(
     with open(full_path, "wb") as f:
         f.write(await photo.read())
 
-    mood = "happy"
+    mood, probability = detector.top_emotion(cv2.imread(full_path))
+    mood = mood.capitalize()
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -260,15 +270,15 @@ async def analyze_image(
         (user_id, full_path, mood, timestamp)
     )
     conn.commit()
+
+    cur.execute("SELECT mood, timestamp FROM moods WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
+    history = cur.fetchall()
     conn.close()
 
     return {
         "success": True,
         "image_saved_as": unique_filename,
-        "analysis": {
-            "Mood": mood,
-            "Advice": "You look happy!",
-        }
+        "analysis": analyze_history(history)
     }
 
 
