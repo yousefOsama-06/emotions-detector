@@ -11,7 +11,6 @@
 # production
 /build
 
-
 # misc
 .DS_Store
 .env.local
@@ -22,9 +21,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+/API/.venv/
 /API/uploaded_photos/
-
-
-# SQLite database files
 /API/database.db
 /API/database.db-*
