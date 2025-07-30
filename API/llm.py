@@ -3,8 +3,8 @@ import json
 from openai import OpenAI
 
 base_url = "https://openrouter.ai/api/v1"
-api_key = "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"
-model = "qwen/qwen3-235b-a22b-07-25:free"
+api_key = "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"
+model = "qwen/qwen3-coder:free"
 
 
 def call_llm(system_prompt, user_prompt):
@@ -50,7 +50,6 @@ def analyze_history(user_mood_history):
 
     {
       "Mood": "The most recently logged mood.",
-      "Mood Summary": "A soft, natural-language reflection on the recent emotional pattern.",
       "Advice": "Kind but honest guidance — not cold facts, but emotional support with clarity.",
       "Suggested Action": "One gentle, achievable suggestion to help today feel a little better."
     }
@@ -76,7 +75,6 @@ def analyze_history(user_mood_history):
     📝 Example Output:
     {
       "Mood": "sad",
-      "Mood Summary": "Your emotional week has felt like a bit of a wave — starting from anxiety, lifting toward happiness, then slipping back into sadness. These shifts can feel exhausting, even if you're doing your best to stay afloat.",
       "Advice": "It's okay to not be okay every day. What matters is that you're showing up — even by logging your mood. That takes strength. Let's look gently at what brought light on the 29th, and what may have clouded the 30th. There's wisdom in both.",
       "Suggested Action": "Try setting aside a quiet moment today — maybe with tea, maybe with music — to journal what’s been weighing on you. You don’t need to fix it. Just name it. That alone is healing."
     }

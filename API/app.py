@@ -16,7 +16,7 @@ from pydantic import BaseModel, EmailStr
 from starlette.responses import JSONResponse, Response
 
 # LLM
-from llm import analyze_history
+from API.llm import analyze_history
 
 # CNN
 from fer import FER
