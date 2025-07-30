@@ -15,6 +15,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from starlette.responses import JSONResponse, Response
 
+# LLM
+from API.llm import analyze_history
+
+# CNN
 from fer import FER
 import cv2
 
@@ -62,7 +66,7 @@ def clear_database():
     conn.close()
 
 
-clear_database()
+# clear_database()
 
 
 def hash_password(password, salt):
@@ -266,15 +270,15 @@ async def analyze_image(
         (user_id, full_path, mood, timestamp)
     )
     conn.commit()
+
+    cur.execute("SELECT mood, timestamp FROM moods WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
+    history = cur.fetchall()
     conn.close()
 
     return {
         "success": True,
         "image_saved_as": unique_filename,
-        "analysis": {
-            "Mood": mood,
-            "Advice": "You look happy!",
-        }
+        "analysis": analyze_history(history)
     }
 
 

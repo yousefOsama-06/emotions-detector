@@ -8,7 +8,7 @@ function Analysis(props) {
         if (props.children && Object.values(props.children).join('').trim()) {
             setView(Object.entries(props.children).map(([key, value]) => {
                     return (
-                        <span key={key}><b>{key}:</b> {value}<br/></span>
+                        <span key={key}><b>{key}</b><br/> {value}<br/><br/></span>
                     );
                 })
             );
