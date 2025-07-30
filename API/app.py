@@ -8,7 +8,6 @@ import datetime
 import uuid
 import shutil
 
-
 from fastapi import FastAPI, HTTPException, Request, Depends, UploadFile, File, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -16,7 +15,7 @@ from pydantic import BaseModel, EmailStr
 from starlette.responses import JSONResponse, Response
 
 # LLM
-from API.llm import analyze_history
+from .llm import analyze_history
 
 # CNN
 from fer import FER
@@ -265,22 +264,23 @@ async def analyze_image(
         mood, probability = detector.top_emotion(cv2.imread(full_path))
         mood = mood.capitalize()
         print(f"Detected mood: {mood} with probability: {probability}")
-        
+
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO moods (user_id, image_path, mood, timestamp) VALUES (?, ?, ?, ?)",
-            (user_id, full_path, mood, timestamp)
+            "INSERT INTO moods (user_id, image_path, mood, confidence, timestamp) VALUES (?, ?, ?,?, ?)",
+            (user_id, full_path, mood, round(probability * 100), timestamp)
         )
         conn.commit()
 
-        cur.execute("SELECT mood, timestamp FROM moods WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
+        cur.execute("SELECT mood, confidence, timestamp FROM moods WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
         history_tuples = cur.fetchall()
         conn.close()
-        
+
         # Convert tuples to the format expected by analyze_history
-        history = [{"mood": mood, "timestamp": timestamp} for mood, timestamp in history_tuples]
+        history = [{"mood": mood, "confidence": confidence, "timestamp": timestamp}
+                   for mood, confidence, timestamp in history_tuples]
         print(f"History being sent to LLM: {history}")
 
         # Get analysis from LLM

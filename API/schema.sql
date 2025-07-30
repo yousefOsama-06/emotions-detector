@@ -8,7 +8,6 @@ CREATE TABLE users (
         CONSTRAINT username_unique UNIQUE,
     email TEXT NOT NULL
         CONSTRAINT email_unique UNIQUE,
-    active BOOLEAN NOT NULL DEFAULT TRUE,
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL
 );
@@ -20,5 +19,6 @@ CREATE TABLE moods (
         CONSTRAINT moods_users_id_fk REFERENCES users,
     image_path TEXT NOT NULL,
     mood TEXT NOT NULL,
+    confidence INTEGER NOT NULL,
     timestamp TEXT NOT NULL
 ); 
