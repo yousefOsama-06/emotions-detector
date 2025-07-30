@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react";
-import { useAuth } from "./AuthContext";
+import {useAuth} from "./AuthContext";
 
 function History() {
-    const { user } = useAuth();
+    const {user} = useAuth();
     const [history, setHistory] = useState(<></>);
 
     function getHistory() {
@@ -22,9 +22,7 @@ function History() {
                 return response.json();
             })
             .then(data => {
-                // Limit to 5 most recent entries
-                const limitedData = data.slice(0, 5);
-                const historyRows = limitedData.map((entry) => {
+                const historyRows = data.map((entry) => {
                     return (
                         <tr key={entry.timestamp}>
                             <td><img src={entry.image_data} alt={"img"}/></td>
