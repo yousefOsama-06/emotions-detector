@@ -15,6 +15,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from starlette.responses import JSONResponse, Response
 
+from fer import FER
+import cv2
+
+detector = FER(mtcnn=True)
+
 app = FastAPI()
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
@@ -173,7 +178,7 @@ def login(response: Response, req: LoginRequest):
             secure=False
         )
         return {
-            "success": True, 
+            "success": True,
             "token": token,
             "user": {
                 "id": user_id,
@@ -200,7 +205,7 @@ async def check_auth(request: Request):
         cur.execute("SELECT id, username, email FROM users WHERE id = ?", (user_id,))
         user = cur.fetchone()
         conn.close()
-        
+
         if user:
             return {
                 "success": True,
@@ -251,7 +256,8 @@ async def analyze_image(
     with open(full_path, "wb") as f:
         f.write(await photo.read())
 
-    mood = "happy"
+    mood, probability = detector.top_emotion(cv2.imread(full_path))
+    mood = mood.capitalize()
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
