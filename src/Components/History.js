@@ -1,8 +1,9 @@
 import {useEffect, useState} from "react";
-import { useAuth } from "./AuthContext";
+import {useAuth} from "./AuthContext";
+import HistoryRow from "./HistoryRow";
 
-function History() {
-    const { user } = useAuth();
+export default function History() {
+    const {user} = useAuth();
     const [history, setHistory] = useState(<></>);
 
     function getHistory() {
@@ -22,15 +23,9 @@ function History() {
                 return response.json();
             })
             .then(data => {
-                // Limit to 5 most recent entries
-                const limitedData = data.slice(0, 5);
-                const historyRows = limitedData.map((entry) => {
+                const historyRows = data.map((entry) => {
                     return (
-                        <tr key={entry.timestamp}>
-                            <td><img src={entry.image_data} alt={"img"}/></td>
-                            <td>{entry.mood}</td>
-                            <td>{new Date(entry.timestamp).toLocaleString()}</td>
-                        </tr>
+                        <HistoryRow getHistory={getHistory} key={entry.id}>{entry}</HistoryRow>
                     );
                 });
                 setHistory(historyRows);
@@ -64,5 +59,3 @@ function History() {
         </section>
     );
 }
-
-export default History;
