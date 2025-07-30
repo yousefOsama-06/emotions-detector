@@ -128,13 +128,8 @@ function Upload({setResult}) {
                 <h2>Upload a Picture</h2>
                 <div id="error-message" style={{color: "red"}}>{error}</div>
                 {!showWebcam && (<form id="upload-form" onSubmit={e => e.preventDefault()}>
-                    <div style={{
-                        display: 'flex',
-                        gap: '12px',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        flexWrap: 'wrap'
-                    }}>
+                                    <div className="upload-container">
+                    <div className="upload-actions">
                         <div
                             className={`dropzone${dragActive ? " active" : ""}`}
                             onClick={openFileDialog}
@@ -172,15 +167,26 @@ function Upload({setResult}) {
                                 <circle cx="12" cy="13.5" r="3.5"/>
                                 <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                             </svg>
-                            <span style={{marginLeft: 6}}>Take Photo</span>
+                            <span>Take Photo</span>
                         </button>
                     </div>
+                    
                     {imgSrc && imgSrc !== "null" && (
-                        <img id="preview-image" name="preview-image" src={imgSrc} alt="preview"
-                             style={{maxWidth: '300px', marginTop: '10px'}}/>
+                        <div className="preview-container">
+                            <img id="preview-image" name="preview-image" src={imgSrc} alt="preview"/>
+                        </div>
                     )}
-                    <br/>
-                    <button type="button" id="submit-btn" onClick={analyze}>Analyze Emotion</button>
+                    
+                    <div className="analyze-container">
+                        <button type="button" className="analyze-btn" onClick={analyze}>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4"/>
+                                <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
+                            </svg>
+                            Analyze Emotion
+                        </button>
+                    </div>
+                </div>
                 </form>)}
                 {showWebcam && (
                     <div className="webcam-modal">

@@ -5,9 +5,9 @@ import hashlib
 import secrets
 import jwt
 import datetime
-
 import uuid
 import shutil
+
 
 from fastapi import FastAPI, HTTPException, Request, Depends, UploadFile, File, Path
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,7 +66,7 @@ def clear_database():
     conn.close()
 
 
-# clear_database()
+clear_database()
 
 
 def hash_password(password, salt):
@@ -253,33 +253,48 @@ async def analyze_image(
         photo: UploadFile = File(...),
         user_id: int = Depends(verify_token)
 ):
-    file_extension = os.path.splitext(photo.filename)[1]
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    try:
+        file_extension = os.path.splitext(photo.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
 
-    full_path = os.path.join(photo_dir, unique_filename)
-    with open(full_path, "wb") as f:
-        f.write(await photo.read())
+        full_path = os.path.join(photo_dir, unique_filename)
+        with open(full_path, "wb") as f:
+            f.write(await photo.read())
 
-    mood, probability = detector.top_emotion(cv2.imread(full_path))
-    mood = mood.capitalize()
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO moods (user_id, image_path, mood, timestamp) VALUES (?, ?, ?, ?)",
-        (user_id, full_path, mood, timestamp)
-    )
-    conn.commit()
+        # Analyze the image with FER
+        mood, probability = detector.top_emotion(cv2.imread(full_path))
+        mood = mood.capitalize()
+        print(f"Detected mood: {mood} with probability: {probability}")
+        
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO moods (user_id, image_path, mood, timestamp) VALUES (?, ?, ?, ?)",
+            (user_id, full_path, mood, timestamp)
+        )
+        conn.commit()
 
-    cur.execute("SELECT mood, timestamp FROM moods WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
-    history = cur.fetchall()
-    conn.close()
+        cur.execute("SELECT mood, timestamp FROM moods WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
+        history_tuples = cur.fetchall()
+        conn.close()
+        
+        # Convert tuples to the format expected by analyze_history
+        history = [{"mood": mood, "timestamp": timestamp} for mood, timestamp in history_tuples]
+        print(f"History being sent to LLM: {history}")
 
-    return {
-        "success": True,
-        "image_saved_as": unique_filename,
-        "analysis": analyze_history(history)
-    }
+        # Get analysis from LLM
+        analysis_result = analyze_history(history)
+        print(f"LLM analysis result: {analysis_result}")
+
+        return {
+            "success": True,
+            "image_saved_as": unique_filename,
+            "analysis": analysis_result
+        }
+    except Exception as e:
+        print(f"Error in analyze_image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
 @app.get('/moods')
