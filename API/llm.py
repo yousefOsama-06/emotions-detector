@@ -3,7 +3,7 @@ import json
 from openai import OpenAI
 
 base_url = "https://openrouter.ai/api/v1"
-api_key = "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"
+api_key = "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"
 model = "qwen/qwen3-coder:free"
 
 
@@ -93,8 +93,5 @@ def analyze_history(user_mood_history):
         print(f"Error in analyze_history: {str(e)}")
         # Return a fallback response if LLM fails
         return {
-            "Mood": user_mood_history[0]["mood"] if user_mood_history else "Unknown",
-            "Mood Summary": "I'm having trouble analyzing your mood patterns right now, but I'm here to support you.",
-            "Advice": "Take a moment to breathe and be kind to yourself. Every emotion is valid.",
-            "Suggested Action": "Try taking a short walk or doing something that brings you comfort."
+            "Mood": "Unknown. You have too many thoughts on your mind."
         }
