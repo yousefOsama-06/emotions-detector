@@ -3,7 +3,7 @@ import json
 from openai import OpenAI
 
 base_url = "https://openrouter.ai/api/v1"
-api_key = "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"
+api_key = "your-api-key"
 model = "qwen/qwen3-coder:free"
 
 
